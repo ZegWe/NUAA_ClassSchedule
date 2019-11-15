@@ -11,10 +11,11 @@ main.py  程序入口
 @Author: MiaoTony, ZegWe
 """
 
+import os
 import time
 import logging
 import argparse
-import getpass
+from getpass import getpass
 from datetime import datetime, timedelta
 from pytz import timezone
 from generateICS import create_ics, export_ics
@@ -68,7 +69,7 @@ if __name__ == "__main__":
             print('Please login!')
             stuID = input('Please input your student ID:')
             # stuPwd = input('Please input your password:')
-            stuPwd = getpass.getpass('Please input your password:(不会回显，输入完成<ENTER>即可)')
+            stuPwd = getpass('Please input your password:(不会回显，输入完成<ENTER>即可)')
             while True:
                 choice = int(input('Please input your choice (`0`: personal, `1`: class):'))
                 if choice in [0, 1]:
@@ -91,9 +92,10 @@ if __name__ == "__main__":
         print('xlsx文件生成完成，开始导出！\n')
         export_xls(xlsx, semester_year, semester, stuID)  # Export `.xlsx` file
         print('导出完成，累计用时：', time.time() - temp_time, 's')
-        print("Thanks for your use! 欢迎来GitHub上点个Star呢")
+        print("Thanks for your use! 欢迎来GitHub上点个Star呢！")
     except Exception as e:
         print("ERROR! 欢迎在GitHub上提出issue & Pull Request!")
         print(e)
     finally:
         session.cookies.clear()  # 清一下cookie
+        os.system('pause')
