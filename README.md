@@ -12,7 +12,7 @@ NUAA_ClassSchedule
 模拟登录南京航空航天大学新版教务系统，获取课表，解析后生成iCal日历文件...  
 
 >- 话说大家平常是怎么看课表的呀？  
->  - **上教务系统** / **截图** / **小程序** / **手动建课表** / **问同学** / ...   
+>- **上教务系统** / **截图** / **小程序** / **手动建课表** / **问同学** / ...   
 >
 >- I have an idea! 大家有没有想过把课表导入到日历呀？！  
 >你看，这么做不仅可以**自定义课程**，和其他安排放在一起；  
@@ -31,6 +31,8 @@ NUAA_ClassSchedule
 所以——    
 感兴趣的一起来干呗！   
 **欢迎提issue & PR！**  
+
+
 
 ### **Important!! 免责条款**  
 
@@ -68,14 +70,14 @@ NUAA_ClassSchedule
 
 - Step 1   
  进入你喜欢的目录，将本仓库clone到本地，或直接下载`zip`文件（Download ZIP）   
-```shell script
+```
     git clone https://github.com/miaotony/NUAA_ClassSchedule.git
 ```
  
 - Step 2  
  进入目录，安装所需的库（Linux下使用pip3，Windows下使用pip）  
-```shell script
-    pip3 install -r requirement.txt
+```
+    pip3 install -r requirements.txt
 ```
 
 - Step 3  
@@ -92,16 +94,16 @@ NUAA_ClassSchedule
   
 
 Windows 环境下：  
-```shell script
+```
     python main.py
 ```
 
 Linux 环境下：  
-```shell script
+```
     python3 main.py
 ```
 或者 直接执行main.py （前提是将文件权限设为**可执行**）  
-```shell script
+```
     chmod +x *
     ./main.py
 ```
@@ -126,7 +128,7 @@ optional arguments:
 ```  
 
 示例：  
-```shell script
+```
     python main.py -i <your ID> -p <your password> 
 ```
 
@@ -151,18 +153,20 @@ optional arguments:
 ### **Screenshots 使用截图**    
 
 **使用命令行参数：**  
-![V0.7.0.20191109-1](img/V0.7.0.20191109-1.png)  
+![V0.10.0.20191116](img/V0.10.0.20191116.png)  
 
 **控制台输入：**  
 ![V0.4.0.20191026-1](img/V0.4.0.20191026-1.png)  
 
 **导出`.ics`文件：**   
-![V0.6.0.20191108-1.png](img/V0.6.0.20191108-1.png)  
+![successful_export_example](img/successful_export_example.png)  
 
 **将`.ics`导入到Outlook的效果：**   
 ![Outlook_example.png](img/Outlook_example.png)  
+客户端：  
+![Outlook_example_iPad.png](img/Outlook_example_iPad.png)  
 
-**将课表导出到`.xlsx`文件：**
+**将课表导出到`.xlsx`文件：**  
 ![xlsx_file](img/V0.8.0.20191112.png)
 
 **使用`.exe`程序执行：**（V0.9.0.20191115 开始支持）  
@@ -261,6 +265,14 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 已经匹配天目湖校区时间表啦~  
 （潜在bug：教室名称为空则默认是将军路明故宫校区时间表...
 
+* Issue #13   
+**由于11.18晚上教务系统在登录验证中加入了验证码，导致本脚本登录失败，目前无法正常使用，恢复时间未知。**   
+欢迎大佬们的PR哈！   
+![1574163995402](https://user-images.githubusercontent.com/41962043/69144028-5bbbd580-0b05-11ea-99dc-e89ffa3750d0.jpeg)  
+>- 在Windows下有一个解决方案是，爬取验证码图片后调用PIL库进行显示。  
+>---->V0.11.0.20191121版本已利用此方案进行修复  
+
+
 * Issue #10 课程所在周还没有进行合并，于是显示出来的是分立的，这个后面再说吧。  
 
 * Issue #11 时长持续超过两节（如持续三节课）的课，获取的原始数据中可能存在分开（如2+1）的形式，导致生成的iCal也是独立的，
@@ -273,9 +285,11 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 ---
 ## Version
 
-@Version:  V0.10.0.20191116
+@Version:  V0.11.0.20191121
 
 @Update Log:  
+>    V0.11.0.20191121 Fix Issue #13 captcha bug, but only for Windows.调用PIL库显示验证码，仅Windows下有效。    
+
 >    V0.10.0.20191116 新增命令行导出选项参数；重新打包，精简可执行程序大小并新增MacOS版本；修复Linux下`sh: 1: pause: not found` bug  
 
 >    V0.9.0.20191115 新增打包为`.exe`可执行程序，可在未安装python环境的Windows系统下使用  
