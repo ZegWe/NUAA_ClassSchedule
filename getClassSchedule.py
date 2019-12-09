@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """
 getClassSchedule  登录教务系统，获取课表，进行解析及导出
@@ -14,7 +14,13 @@ import time
 import random
 import json
 import logging
+import tkinter as tk
+import tkinter.ttk
+from PIL import Image, ImageTk
+from io import BytesIO
+# from pytesseract import image_to_string
 from lessonObj import Lesson
+from examObj import Exam
 
 session = requests.Session()
 UAs = [
@@ -42,7 +48,7 @@ session.headers = headers
 host = r'http://aao-eas.nuaa.edu.cn'
 
 
-def aao_login(stuID, stuPwd, retry_cnt=3):
+def aao_login(stuID, stuPwd, captcha_str, retry_cnt=1):
     """
     登录新教务系统
     :param stuID: 学号
@@ -52,9 +58,10 @@ def aao_login(stuID, stuPwd, retry_cnt=3):
     """
     try_cnt = 1
     while try_cnt <= retry_cnt:
-        session.cookies.clear()  # 先清一下cookie
+        # session.cookies.clear()  # 先清一下cookie
         r1 = session.get(host + '/eams/login.action')
         # logging.debug(r1.text)
+        # captcha_resp = session.get(host + '/eams/captcha/image.action')  # Captcha 验证码图片
 
         temp_token_match = re.compile(r"CryptoJS\.SHA1\(\'([0-9a-zA-Z\-]*)\'")
         # 搜索密钥
@@ -71,15 +78,26 @@ def aao_login(stuID, stuPwd, retry_cnt=3):
             postPwd = s1.hexdigest()  # 加密处理
             # logging.debug(postPwd)  # 结果是40位字符串
 
+            # Captcha 验证码 # Fix Issue #13 bug, but only for Windows.
+            # captcha_img = Image.open(BytesIO(captcha_resp.content))
+            # captcha_img.show()  # show the captcha
+
+            # img= ImageTk.PhotoImage(captcha_img)
+            # label_img = tkinter.ttk.Label(window, image = img).place(x = 560, y = 2)
+
+            # text = image_to_string(captcha_img)  # 前提是装了Tesseract-OCR，可以试试自动识别
+            # print(text)
+            # captcha_str = input('Please input the captcha:')
+
             # 开始登录啦
-            postData = {'username': stuID, 'password': postPwd}
+            postData = {'username': stuID, 'password': postPwd, 'captcha_response': captcha_str}
             time.sleep(0.5 * try_cnt)  # fix Issue #2 `Too Quick Click` bug, sleep for longer time for a new trial
             r2 = session.post(host + '/eams/login.action', data=postData)
             if r2.status_code == 200 or r2.status_code == 302:
                 logging.debug(r2.text)
                 temp_key = temp_token_match.search(r2.text)
                 if temp_key:  # 找到密钥说明没有登录成功，需要重试
-                    print("ID or Password ERROR! Login ERROR!\n")
+                    print("ID, Password or Captcha ERROR! Login ERROR!\n")
                     temp_key = temp_key.group(1)
                     logging.debug(temp_key)
                     exit(2)
@@ -225,10 +243,53 @@ def parseCourseTable(courseTable):
     return list_lessonObj
 
 
-def exportCourseTable(list_lessonObj, semester_year, semester, stuID):
+def getExamSchedule():
+    """
+    获取考试安排
+    :return:Ans_list: {list} 考试安排列表
+    """
+    time.sleep(0.5)
+    examSchedule = session.get(host + r'/eams/examSearchForStd!examTable.action')
+
+    soup = BeautifulSoup(examSchedule.text.encode('utf-8'), 'lxml')
+    '''exam Schedule'''
+    exam_Schedule_Text = soup.select('tbody > tr')
+    print(exam_Schedule_Text)
+    Ans_list = []
+
+    if exam_Schedule_Text:  # add a protection
+        for single_exam_Schedule in exam_Schedule_Text:
+            tmp = []
+            single_exam_Schedule = single_exam_Schedule.find_all('td')
+            if single_exam_Schedule:  # add a protection
+                for i in single_exam_Schedule:
+                    tmp.append(i.get_text().strip())
+                Ans_list.append(tmp)
+    return Ans_list
+
+
+def parseExamSchedule(exams):
+    '''
+    解析考试列表
+    :return: examObj
+    '''
+    list_examObj = []
+    if len(exams) > 0:
+        for exam in exams:
+            temp_ExamObj = Exam(exam)
+            print(temp_ExamObj.str_for_print)  # print the exam info
+            list_examObj.append(Exam(exam))
+    else:
+        print('暂无考试安排！')
+    return list_examObj
+    # return map(Exam,exams)
+
+
+def exportCourseTable(list_lessonObj, list_examObj, semester_year, semester, stuID):
     """
     导出课表到文件
     :param list_lessonObj: {list}Lesson类组成的列表，包含所有课表信息
+    :param list_examObj: {list}Exam类组成的列表，包含考试信息
     :param semester_year: {str}学年
     :param semester: {str}学期 '1'或'2'
     :param stuID {str}学号
@@ -243,6 +304,11 @@ def exportCourseTable(list_lessonObj, semester_year, semester, stuID):
                 output_file.write(lessonObj.str_for_print)
                 output_file.write('\n\n')
                 course_cnt += 1
+            if len(list_examObj) > 0:
+                output_file.write('---------以下为考试信息----------\n')
+                for examObj in list_examObj:
+                    output_file.write(examObj.str_for_print)
+                    output_file.write('\n')
         except Exception as e:
             print('ERROR! 导出课表到文件出错！')
             print(e)

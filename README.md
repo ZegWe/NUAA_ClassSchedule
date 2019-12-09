@@ -1,4 +1,4 @@
-# NUAA_ClassSchedule
+NUAA_ClassSchedule
 
 [点此访问本项目网页](https://miaotony.github.io/NUAA_ClassSchedule/)  
 
@@ -9,10 +9,10 @@
 ## Description
 
 NUAA_ClassSchedule  
-模拟登录南京航空航天大学新版教务系统，获取课表，解析后生成iCal日历文件...  
+登录南京航空航天大学新教务系统，获取课表及考试信息，解析后生成iCal日历及xlsx表格文件，进而导入Outlook等日历。     
 
 >- 话说大家平常是怎么看课表的呀？  
->  - **上教务系统** / **截图** / **小程序** / **手动建课表** / **问同学** / ...   
+>- **上教务系统** / **截图** / **小程序** / **手动建课表** / **问同学** / ...   
 >
 >- I have an idea! 大家有没有想过把课表导入到日历呀？！  
 >你看，这么做不仅可以**自定义课程**，和其他安排放在一起；  
@@ -31,6 +31,8 @@ NUAA_ClassSchedule
 所以——    
 感兴趣的一起来干呗！   
 **欢迎提issue & PR！**  
+
+
 
 ### **Important!! 免责条款**  
 
@@ -51,6 +53,19 @@ NUAA_ClassSchedule
 
 **请在`Python 3`环境下食用**。   
 
+
+>- 什么？你没有 Python 环境？ 或者 你不想折腾？  
+>- 在 Windows 或 MacOS 下可以试试这个打包好的可执行程序啦！    
+>（MacOS版本由 @ZegWe 提供）  
+
+下载地址在 [Release](https://github.com/miaotony/NUAA_ClassSchedule/releases) 下呢！  
+
+>~~缺点就是，文件太大下载太慢，而且每一次打开的时候根据电脑性能需要加载一定时间。（这行划掉）~~  
+> 之前的问题出在pyinstaller打包上，**现在重新打包了，文件精简啦，欢迎来试试呀！**    
+
+>如果喜欢折腾，或者不放心的话，推荐还是用下面的方法呢！  
+
+
 ### **Step**  
 
 - Step 1   
@@ -58,53 +73,61 @@ NUAA_ClassSchedule
 ```
     git clone https://github.com/miaotony/NUAA_ClassSchedule.git
 ```
- 
+
 - Step 2  
- 安装所需的库（Linux下使用pip3，Windows下使用pip）  
+ 进入目录，安装所需的库（Linux下使用pip3，Windows下使用pip）  
 ```
-    pip3 install -r requirement.txt
+    pip3 install -r requirements.txt
 ```
 
 - Step 3  
 **使用时先修改程序里的`stuID`为学号，`stuPwd`为教务处密码**  
    请在`r""`两个引号之间输入，即变量类型为字符串str。  
-   
+  
    `choice`为个人或班级课表的选择，0为个人，1为班级，**默认为个人课表**。  
    而后保存，再执行此程序即可。  
-   
+  
    **密码仅在本地保存，访问官方教务系统，请放心使用。**   
-     
+  
    *习惯命令行参数的，~~后面会加的啦~~*   
    **已经实现了命令行参数，具体往下看！**   
   
 
 Windows 环境下：  
-
 ```
     python main.py
 ```
 
 Linux 环境下：  
-
 ```
     python3 main.py
 ```
+或者 直接执行main.py （前提是将文件权限设为**可执行**）  
+```
+    chmod +x *
+    ./main.py
+```
 
-从 V0.4.0.20191026 版本起开始支持命令行参数啦！  
+> 从 V0.4.0.20191026 版本起开始支持命令行参数啦！  
+
 **命令行参数说明：**  
 ```
-usage: main.py [-h] [-i ID] [-p PWD] [-c {0,1}]  
+usage: main.py [-h] [-i ID] [-p PWD] [-c {0,1}] [--noexam] [--notxt]
+               [--noxlsx]
 
-Get NUAA class schedule at ease! 一个小jio本，让你获取课表更加便捷而实在~  
+Get NUAA class schedule at ease! 一个小jio本，让你获取课表更加便捷而实在~
 
-optional arguments:  
-  -h, --help            show this help message and exit  
-  -i ID, --id ID        Student ID 学号  
-  -p PWD, --pwd PWD     Student password 教务处密码  
-  -c {0,1}, --choice {0,1}  
-                        Input `0` for personal curriculum(default), `1` for class curriculum.   
-                        输入`0`获取个人课表(无此参数默认为个人课表)，输入`1`获取班级课表   
-```  
+optional arguments:
+  -h, --help            show this help message and exit
+  -i ID, --id ID        Student ID 学号
+  -p PWD, --pwd PWD     Student password 教务处密码
+  -c {0,1}, --choice {0,1}
+                        Input `0` for personal curriculum(default), `1` for
+                        class curriculum. 输入`0`获取个人课表(无此参数默认为个人课表)，输入`1`获取班级课表
+  --noexam              Don't export exam schedule. 加入此选项则不导出考试安排
+  --notxt               Don't export `.txt` file. 加入此选项则不导出`.txt`文件
+  --noxlsx              Don't export `.xlsx` file. 加入此选项则不导出`.xlsx`表格
+```
 
 示例：  
 ```
@@ -120,44 +143,54 @@ optional arguments:
 - Step 4  
 运行后即可得到解析好的课表啦~   
 在`NUAAiCal-Data`目录下就可以看到生成好的`.ics`日历文件，`.txt`文本文件，还有`.xlsx`表格文件啦！  
+  
+    > V0.10.0.20191116: 导出选项可通过命令行参数进行选择  
+
 
 - Step 5  
 将生成好的`.ics`日历文件导入你喜欢的日历，然后尽情享用吧~！  
 **顺手再点个Star吧~**   
 **在导入iCal日历前，请确认时区已设定为 `UTC/GMT+08:00` 即北京时间，否则可能会出现导入后时间不正确的情况！**   
 
-
->什么？你没有Python环境？  
->在Windows下可以试试这个打包好的可执行程序呀！    
-
-下载地址在Release下呢！  
-
->缺点就是emmm，文件太大下载太慢，而且每一次打开的时候根据电脑性能需要加载一定时间。  
->那就凑合着用吧（建议还是用上面的方法呀！  
-
-
     
 ### **Screenshots 使用截图**    
 
 **使用命令行参数：**  
-![V0.7.0.20191109-1](img/V0.7.0.20191109-1.png)  
+![V0.10.0.20191116](img/V0.10.0.20191116.png)  
 
 **控制台输入：**  
 ![V0.4.0.20191026-1](img/V0.4.0.20191026-1.png)  
 
+**使用`.exe`程序执行：** （V0.9.0.20191115 开始支持）   
+![exe](img/exe.png)  
+Or 从命令行执行：  
+![exe2](img/exe2.png)  
+
+**GUI界面：**（V0.12.0.20191124）    
+
+![GUI](img/GUI.png)
+
 **导出`.ics`文件：**   
-![V0.6.0.20191108-1.png](img/V0.6.0.20191108-1.png)  
+![successful_export_example](img/successful_export_example.png)  
 
 **将`.ics`导入到Outlook的效果：**   
 ![Outlook_example.png](img/Outlook_example.png)  
 
-**将课表导出到`.xlsx`文件：**
+Outlook客户端：  
+![Outlook_example_iPad.png](img/Outlook_example_iPad.png)  
+
+**将课表导出到`.xlsx`文件：**  
 ![xlsx_file](img/V0.8.0.20191112.png)
 
-**使用`.exe`程序执行：**（V0.9.0.20191115开始支持）  
-![exe](img/exe.png)  
-Or 从命令行执行：  
-![exe2](img/exe2.png)  
+**导出到文本文件：**   
+
+![Export_txt](img/Export_txt.png)
+
+**WEB端部署：**（暂未完成，仍在测试中）     
+
+![image-20191124124120567](img/Web.png)
+
+  
 
 ### Raw Data  
 课表解析部分原始JavaScript数据片段：   
@@ -250,9 +283,17 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 已经匹配天目湖校区时间表啦~  
 （潜在bug：教室名称为空则默认是将军路明故宫校区时间表...
 
-* 课程所在周还没有进行合并，于是显示出来的是分立的，这个后面再说吧。  
+* Issue #13   
+**由于11.18晚上教务系统在登录验证中加入了验证码，导致本脚本登录失败，目前无法正常使用，恢复时间未知。**   
+欢迎大佬们的PR哈！   
+![1574163995402](https://user-images.githubusercontent.com/41962043/69144028-5bbbd580-0b05-11ea-99dc-e89ffa3750d0.jpeg)  
+>- 在Windows下有一个解决方案是，爬取验证码图片后调用PIL库进行显示。  
+>---->V0.11.0.20191121版本已利用此方案进行修复  
 
-* 时长持续超过两节（如持续三节课）的课，获取的原始数据中可能存在分开（如2+1）的形式，导致生成的iCal也是独立的，
+
+* Issue #10 课程所在周还没有进行合并，于是显示出来的是分立的，这个后面再说吧。  
+
+* Issue #11 时长持续超过两节（如持续三节课）的课，获取的原始数据中可能存在分开（如2+1）的形式，导致生成的iCal也是独立的，
 目前还没有做合并emmm。  
 
 * 考虑到不同课表在解析上可能存在差异，且随着时间发展页面的访问可能会发生变化，目前版本具有时效性。  
@@ -262,9 +303,17 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 ---
 ## Version
 
-@Version:  V0.9.0.20191115
+@Version:  V0.13.0.20191207 
 
 @Update Log:  
+>    V0.13.0.20191207 Fix Issue #14 【获取课表到获取考试信息后直接报错 `list index out of range`】
+
+>    V0.12.0.20191124 新增导出考试安排；新增基于tkinter实现GUI界面，并与CLI相互兼容，但仍存在小bug。（For Hackathon 2019 @ East China, 20191123-24, with Cooook & Pinyi Qian)    
+
+>    V0.11.0.20191121 Fix Issue #13 captcha bug, but only for Windows.调用PIL库显示验证码，仅Windows下有效。    
+
+>    V0.10.0.20191116 新增命令行导出选项参数；重新打包，精简可执行程序大小并新增MacOS版本；修复Linux下`sh: 1: pause: not found` bug  
+
 >    V0.9.0.20191115 新增打包为`.exe`可执行程序，可在未安装python环境的Windows系统下使用  
 
 >    V0.8.1.20191113 修复表格导出bug，完善`requirement.txt`等  
@@ -284,13 +333,13 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 
 >    V0.4.0.20191026 增加命令行参数解析，增加控制台输入学号密码（不回显处理），并与初始设置兼容；修复班级课表中教师为空时解析异常bug  
      ![V0.4.0.20191026-2](img/V0.4.0.20191026-2.png)  
-    
+
 >    V0.3.1.20191018 增加解析课程所在周并优化课表输出格式，修复班级课表中班级解析bug，引入logging模块记录日志便于debug  
      ![V0.3.1.20191018](img/V0.3.1.20191018.png)
 
 >    V0.3.0.20191017 增加 课表解析，增加 班级、实践周匹配，优化代码结构   
      ![V0.3.0.20191017](img/V0.3.0.20191017.png)  
-        
+
 >    V0.2.1.20191012 增加UA列表，增加BeautifulSoup提取姓名学号，优化代码结构，为下一步解析课表做准备  
 
 >    V0.2.0.20191010 成功登录教务系统，并成功获取个人或班级课表，但还未进行提取  
@@ -310,12 +359,12 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 - [x] 基于对象重构  Refactor based on object  
 - [x] 生成`.ics`日历文件 :calendar:  Generate `.ics` file  
 - [x] 生成`.xlsx`表格文件  Generate `.xlsx` file  
-- [x] 打包为`.exe`可执行程序 Packing  
-- [ ] 图形化界面  GUI  
+- [x] 打包为可执行程序 Packing  
+- [x] 图形化界面  GUI  
+- [x] 导出考试安排  Export examination schedule  
 - [ ] 搭建网络服务，在线导出日历文件  Web service  
 - [ ] 提供课表订阅服务  Subscribe service  
 - [ ] 使用情况分析  Usage analysis  
-- [ ] 导出考试安排  Export examination schedule  
 - [ ] 适配研究生课表  Adapt to postgraduate's class schedule
 - [ ] 适配教师课表  Adapt to teacher's class schedule
 - [ ] etc.     
@@ -331,7 +380,7 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 
    这是个（已经毕业了的）学长开发的小项目，但老接口随着新教务系统的启用而关闭，进而原脚本无法继续使用。
    
-   在开发本项目过程中，解析了课表之后，受到了此项目的启发，参考其实现了iCal日历文件的生成。在此非常感谢原作者！  
+   在开发本项目过程中，解析课表之后，受到了此项目的启发，参考其实现了iCal日历文件的生成。在此非常感谢原作者！  
 
 2. ISCNU iCal课表
     >网址：[点这里](https://i.scnu.edu.cn/ical/)   
@@ -342,13 +391,7 @@ function TaskActivity(teacherId,teacherName,courseId,courseName,roomId,roomName,
 ---
 ## Sponsorship
 
-如果真想赞助的话，`Alipay`扫下面的二维码领个红包吧，每天都能领的那种，顺手薅个羊毛。  
-
-或者 
-
-> 打开支付宝首页搜“**522869066**”领红包
-
-<img src="img/Sponsorship.jpg" style="max-width:50%;" />
+如果真想赞助的话  
 
 `WeChat`:   
 
@@ -377,5 +420,5 @@ Non-commercial use!
 The final interpretation right belongs to the developer of the project.  
 
 
-Copyright © 2019 [MiaoTony](https://github.com/miaotony)  
+Copyright © 2019 [MiaoTony](https://github.com/miaotony)  & other developers.  
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """
 Welcome to use the NUAA_ClassSchedule script.
@@ -8,17 +8,18 @@ Pull Requests & issues welcome!
 
 main.py  程序入口
 
-@Author: MiaoTony, ZegWe
+@Author: MiaoTony, ZegWe, Cooook, Pinyi Qian
 """
 
 import os
+from platform import system as system_platform
 import time
 import logging
 import argparse
 from getpass import getpass
 from datetime import datetime, timedelta
 from pytz import timezone
-from generateICS import create_ics, export_ics
+from generateICS import create_ics, export_ics, create_exam_ics
 from getClassSchedule import *
 from generateXLSX import *
 from settings import VERSION, DEBUG
@@ -42,7 +43,7 @@ if __name__ == "__main__":
                                    tzinfo=timezone('Asia/Shanghai'))
 
     print("Welcome to use the NUAA_ClassSchedule script.")
-    print("Author: MiaoTony\nGitHub: https://github.com/miaotony/NUAA_ClassSchedule")
+    print("Author: MiaoTony, ZegWe, Cooook, Pinyi Qian\nGitHub: https://github.com/miaotony/NUAA_ClassSchedule  \n")
     print("Version: " + VERSION + '\n')
 
     # Parse args 命令行参数解析
@@ -52,12 +53,16 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--pwd", help="Student password 教务处密码", type=str)
     parser.add_argument("-c", "--choice", help="Input `0` for personal curriculum(default), `1` for class curriculum.\
                         输入`0`获取个人课表(无此参数默认为个人课表)，输入`1`获取班级课表", type=int, choices=[0, 1])  # , default=0
+    parser.add_argument("--noexam", help="Don't export exam schedule. 加入此选项则不导出考试安排", action="store_true")
+    parser.add_argument("--notxt", help="Don't export `.txt` file. 加入此选项则不导出`.txt`文件", action="store_true")
+    parser.add_argument("--noxlsx", help="Don't export `.xlsx` file. 加入此选项则不导出`.xlsx`表格", action="store_true")
 
     try:
         # 解析优先级高到低：命令行参数->上面的初始设置->控制台输入
         args = parser.parse_args()
         logging.info(args)
 
+        print('## Start login!')
         if args.id is not None:  # 命令行参数优先
             stuID = args.id
         if args.pwd is not None:
@@ -66,7 +71,6 @@ if __name__ == "__main__":
             choice = args.choice
 
         if stuID == '' or stuPwd == '':  # 若学号密码为空则在控制台获取
-            print('Please login!')
             stuID = input('Please input your student ID:')
             # stuPwd = input('Please input your password:')
             stuPwd = getpass('Please input your password:(不会回显，输入完成<ENTER>即可)')
@@ -77,25 +81,46 @@ if __name__ == "__main__":
                 else:
                     print('ERROR! Choice shoule be `0` or `1`!')
 
+        # Captcha 验证码 # Fix Issue #13 bug, but only for Windows & MacOS.
+        captcha_resp = session.get(host + '/eams/captcha/image.action')  # Captcha 验证码图片
+        captcha_img = Image.open(BytesIO(captcha_resp.content))
+        captcha_img.show()  # show the captcha
+
+        # text = image_to_string(captcha_img)  # 前提是装了Tesseract-OCR，可以试试自动识别
+        # print(text)
+        captcha_str = input('Please input the captcha:')
+
+        name = aao_login(stuID, stuPwd, captcha_str, retry_cnt)
         temp_time = time.time()  # 计个时看看
-        name = aao_login(stuID, stuPwd, retry_cnt)
-        print('\nMeow~下面开始获取{}课表啦！\n'.format({0: '个人', 1: '班级'}.get(choice)))
+        print('\n## Meow~下面开始获取{}课表啦！\n'.format({0: '个人', 1: '班级'}.get(choice)))
         courseTable = getCourseTable(choice=choice)
         list_lessonObj = parseCourseTable(courseTable)
-        print('课表获取完成，下面开始生成iCal日历文件啦！\n')
+
+        print('## 下面开始获取考试信息啦！\n')
+        examSchedule = getExamSchedule()
+        list_examObj = parseExamSchedule(examSchedule)
+
+        print('## 信息获取完成，下面开始生成iCal日历文件啦！')
         cal = create_ics(list_lessonObj, semester_start_date)
-        print('日历生成完成，下面开始导出啦！\n')
+        if not args.noexam:  # 若命令行参数含`--noexam`则不导出
+            cal = create_exam_ics(cal, list_examObj)
+
+        print('## 日历生成完成，下面开始导出啦！\n')
         export_ics(cal, semester_year, semester, stuID)  # Export `.ics` file
-        exportCourseTable(list_lessonObj, semester_year, semester, stuID)  # Export `.txt` file
-        print('开始生成xlsx表格文件！ \n')
-        xlsx = create_xls(list_lessonObj, semester_year, semester, stuID)
-        print('xlsx文件生成完成，开始导出！\n')
-        export_xls(xlsx, semester_year, semester, stuID)  # Export `.xlsx` file
-        print('导出完成，累计用时：', time.time() - temp_time, 's')
+        if not args.notxt:  # 若命令行参数含`--notxt`则不导出
+            exportCourseTable(list_lessonObj, list_examObj, semester_year, semester, stuID)  # Export `.txt` file
+        if not args.noxlsx:  # 若命令行参数含`--noxlsx`则不导出
+            print('\n## 开始生成xlsx表格文件！ ')
+            xlsx = create_xls(list_lessonObj, semester_year, semester, stuID)
+            print('## xlsx文件生成完成，开始导出！')
+            export_xls(xlsx, semester_year, semester, stuID)  # Export `.xlsx` file
+        print('\n## 导出完成，累计用时：', time.time() - temp_time, 's')
         print("Thanks for your use! 欢迎来GitHub上点个Star呢！")
+
     except Exception as e:
         print("ERROR! 欢迎在GitHub上提出issue & Pull Request!")
         print(e)
     finally:
         session.cookies.clear()  # 清一下cookie
-        os.system('pause')
+        if system_platform() == 'Windows':  # Fix Linux `sh: 1: pause: not found` bug
+            os.system('pause')
